@@ -1,18 +1,18 @@
-# This file contains common pin mappings for the BIGTREETECH SKR E3
-# Turbo. To use this config, the firmware should be compiled for the
-# LPC1769.Extra low level: enabled. Processor model: lpc1769 (120mhz).
-# Smoothieware bootloader: enabled. GPIO pins: blank. Comms Interface
-# for USB: USB. OR. (For UART): UART0 P03/P02. Baudrate: 250000.
-#
-# cd ~/klipper/
-# make menuconfig
-# make ckean
-# make
-#
-# directory: /home/pi/klipper/out/klipper.bin
-#
+# This file contains common pin mappings for the BIGTREETECH SKR mini
+# E3 v1.2. To use this config, the firmware should be compiled for the
+# STM32F103 with a "28KiB bootloader" and USB communication. Clock Reference: 8MHz
+# Also, select "Enable extra low-level configuration options" and configure
+# "GPIO pins to set at micro-controller startup" to "!PC13".
+
+# The "make flash" command does not work on the SKR mini E3. Instead,
+# after running "make", copy the generated "out/klipper.bin" file to a
+# file named "firmware.bin" on an SD card and then restart the SKR
+# mini E3 with that SD card.
 
 # See docs/Config_Reference.md for a description of parameters.
+
+# Note: This board has a design flaw in its thermistor circuits that
+# cause inaccurate temperatures (most noticeable at low temperatures).
 
 
 [include mainsail.cfg]
@@ -26,8 +26,10 @@
 
 [printer]
 kinematics: corexy
-max_velocity: 350 # 400 is to much at 9000 accel, 350 passed at 9000 accel and 100 iterations
-max_accel: 9000    # 10000 is to much at 400 speed, 9500 highest that worked at 400 speed
+max_velocity: 300 # 400 is to much at 9000 accel, 350 passed at 9000 accel and 100 iterations
+# 10000 is to much at 400 speed, 9500 highest that worked at 400 speed
+# had a layer shift at 9000Accel/350 speed
+max_accel: 9000    
 #max_accel: 10000   #Used for Testing
 #max_accel_to_decel: 10000   #Used for Testing
 max_z_velocity: 5  #Max 15 for 12V TMC Drivers, can increase for 24V
@@ -42,7 +44,7 @@ square_corner_velocity: 5.0
 # BTT SKR E3 Mini V1.2 Mainboard
 ################################
 [mcu]
-serial: /dev/serial/by-id/usb-Klipper_lpc1769_1520010CC09869AF0AC1405EC52000F5-if00
+serial: /dev/serial/by-id/usb-Klipper_stm32f103xe_31FFD2054246303113620557-if00
 
 
 #############################
@@ -74,6 +76,12 @@ probe_points:
     126,118,20
 
 ###################################################################################
+#Additional Board Configuration
+###################################################################################
+[static_digital_output usb_pullup_enable]
+pins: !PC13
+
+###################################################################################
 #Input Shaper
 ###################################################################################
 
@@ -94,9 +102,9 @@ shaper_type_y: mzv
 # Rated Current 2A (RMS) or 2.8A (peak) per coil
 ################################################
 [stepper_x]
-step_pin: P1.4
-dir_pin: !P1.8
-enable_pin: !P1.0
+step_pin: PB13
+dir_pin: !PB12
+enable_pin: !PB14
 microsteps: 64 # TMC2209 acheivable microsteps=8/16/32/64 (without interpolation), 32/64 should introduce noise reduction without positional artifacts
 full_steps_per_rotation: 200 # 1.8 degree stepper motor value
 # rotation_distance = <full_steps_per_rotation> * <microsteps> / <steps_per_mm>
@@ -105,7 +113,7 @@ full_steps_per_rotation: 200 # 1.8 degree stepper motor value
 # This printer 2mm belt/pulley with 20 teeth
 # rotation_distance = 40
 rotation_distance: 40
-endstop_pin: ^P1.29
+endstop_pin: ^PC0
 position_endstop:252
 position_min:   0
 position_max: 252 # full travel distance
@@ -114,7 +122,7 @@ homing_speed: 120 #Max 100
 homing_retract_dist: 5.0
 
 [tmc2209 stepper_x]
-uart_pin: P1.1
+uart_pin: PB15
 interpolate: False # Allows TMC2209 to microstep up to 256 steps. Can introduce inarruracies so recommended to be off
 #run_current: 1.13
 run_current: 1.00 # 50% of the TMC2209 Constant current Max
@@ -128,9 +136,9 @@ stealthchop_threshold: 0
 # Rated Current 2A (RMS) or 2.8A (peak) per coil
 #################################################
 [stepper_y]
-step_pin: P1.14
-dir_pin: !P1.15
-enable_pin: !P1.9
+step_pin: PB10
+dir_pin: !PB2
+enable_pin: !PB11
 microsteps: 64 # TMC2209 acheivable microsteps=8/16/32/64 (without interpolation), 32/64 should introduce noise reduction without positional artifacts
 full_steps_per_rotation: 200 # 1.8 degree stepper motor value
 # rotation_distance = <full_steps_per_rotation> * <microsteps> / <steps_per_mm>
@@ -139,7 +147,7 @@ full_steps_per_rotation: 200 # 1.8 degree stepper motor value
 # This printer 2mm belt/pulley with 20 teeth
 # rotation_distance = 40
 rotation_distance: 40
-endstop_pin: ^P1.28
+endstop_pin: ^PC1
 position_endstop: 236
 position_min: 0
 position_max: 236 # full travel distance
@@ -148,7 +156,7 @@ homing_speed: 120 #Max 100
 homing_retract_dist: 5.0
 
 [tmc2209 stepper_y]
-uart_pin: P1.10
+uart_pin: PC6
 interpolate: False # Allows TMC2209 to microstep up to 256 steps. Can introduce inarruracies so recommended to be off
 #run_current: 1.13
 run_current: 1.00 # 50% of the TMC2209 Constant current Max
@@ -162,16 +170,16 @@ stealthchop_threshold: 0
 # Rated Current 2A (RMS) or 2.8A (peak) per coil
 #################################################
 [stepper_z]
-step_pin: P4.29
-dir_pin: !P4.28
-enable_pin: !P1.16
+step_pin: PB0
+dir_pin: !PC5
+enable_pin: !PB1
 microsteps: 64 # TMC2209 acheivable microsteps=8/16/32/64 (without interpolation), 32/64 should introduce noise reduction without positional artifacts
 full_steps_per_rotation: 200 # 1.8 degree stepper motor value
 # rotation_distance = <screw_pitch> * <number_of_separate_threads>
 # This printer T8 leadscrew (2mm pitch*1 starts)
 # rotation_distance = 2
 rotation_distance: 2
-#endstop_pin:
+#endstop_pin: ^PC2
 endstop_pin: probe:z_virtual_endstop # For bltouch
 #position_endstop: 0
 position_min: -5 # For bltouch
@@ -180,36 +188,8 @@ position_max: 322
 # homing_retract_dist: 5.0
 
 [tmc2209 stepper_z]
-uart_pin: P1.17
+uart_pin: PC10
 interpolate: False # Allows TMC2209 to microstep up to 256 steps. Can introduce inarruracies so recommended to be off
-# run_current: 0.580 # Original BTT config value
-run_current: 0.70 # Set to 45% of the motors rated constant max rating
-#sense_resistor: 0.110
-#stealthchop_threshold: 999999
-stealthchop_threshold: 0
-
-
-#################################################
-# Creality 42-34 Motor
-# Current Rating: 1.5A
-# Rated Current 2A (RMS) or 2.8A (peak) per coil
-#################################################
-[stepper_z1]
-step_pin: P2.11
-dir_pin: !P2.12
-enable_pin: !P0.21
-microsteps: 64 # TMC2209 acheivable microsteps=8/16/32/64 (without interpolation), 32/64 should introduce noise reduction without positional artifacts
-full_steps_per_rotation: 200 # 1.8 degree stepper motor value
-# rotation_distance = <screw_pitch> * <number_of_separate_threads>
-# This printer T8 leadscrew (2mm pitch*1 starts)
-# rotation_distance = 2
-rotation_distance: 2
-
-[tmc2209 stepper_z1]
-uart_pin: P0.22
-interpolate: False # Allows TMC2209 to microstep up to 256 steps. Can introduce inarruracies so recommended to be off
-#diag_pin: P1.25
-#run_current: 0.850
 # run_current: 0.580 # Original BTT config value
 run_current: 0.70 # Set to 45% of the motors rated constant max rating
 #sense_resistor: 0.110
@@ -224,9 +204,9 @@ stealthchop_threshold: 0
 # Rated Current 2A (RMS) or 2.8A (peak) per coil
 ######################################################################################
 [extruder]
-step_pin: P2.6
-dir_pin: !P2.7
-enable_pin: !P0.4
+step_pin: PB3
+dir_pin: !PB4
+enable_pin: !PD2
 microsteps: 16 # TMC2209 acheivable microsteps=8/16/32/64 (without interpolation).
 full_steps_per_rotation: 200 # 1.8 degree stepper motor value
 ## keep rotation distance rounded to three decimal places
@@ -235,13 +215,13 @@ rotation_distance: 35.291 #copied from 5+ to match flow values
 gear_ratio: 7.5:1
 nozzle_diameter: 0.400
 filament_diameter: 1.750
-heater_pin: P2.3
+heater_pin: PC8
 sensor_type: PT1000
-sensor_pin: P0.24
+sensor_pin: PA0
 control: pid
-pid_Kp: 17.623
-pid_Ki: 1.277
-pid_Kd: 60.798
+pid_Kp: 17.905
+pid_Ki: 1.404
+pid_Kd: 57.072
 min_temp: 5
 max_temp: 350
 max_extrude_only_distance: 500.0
@@ -255,7 +235,7 @@ pressure_advance_smooth_time: 0.03
 
 
 [tmc2209 extruder]
-uart_pin: P0.5
+uart_pin: PC11
 interpolate: False # Allows TMC2209 to microstep up to 256 steps. Can introduce inarruracies so recommended to be off
 #run_current: 0.79 # ZeroG 80% Run Current suggestion
 #run_current: 0.85 # LDO Instructions Run Current suggestion
@@ -268,22 +248,19 @@ driver_HEND: 6
 driver_HSTRT:7
 driver_TOFF: 4
 
-[static_digital_output tmc_standby_pins]
-pins: !P3.26, !P3.25, !P1.18, !P1.19, !P2.13
-
 ###################################################################################
 # Bed Heater
 # Creality stock bed
 ###################################################################################
 [heater_bed]
-heater_pin: P2.5
+heater_pin: PC9
 sensor_type: EPCOS 100K B57560G104F
-sensor_pin: P0.25
+sensor_pin: PC3
 # Bed PID Tuned to 110c. Creality bed max: 130c
 control: pid
-pid_Kp: 76.445
-pid_Ki: 1.693
-pid_Kd: 862.869
+pid_Kp: 71.682
+pid_Ki: 1.838
+pid_Kd: 698.896
 min_temp: 0
 max_temp: 130
 
@@ -319,8 +296,8 @@ timeout: 3600 # 60 minutes
 # If a controller board NEEDs 5V mode AND it is 5V tolerant on its input signal line
 # bltouch v3.1: run in console BLTOUCH_STORE MODE=5V or BLTOUCH_STORE MODE=OD
 # bltouch >v3.1: set_output_mode: 5V
-sensor_pin: ^P1.27
-control_pin: P1.23
+sensor_pin: ^PC2
+control_pin: PA1
 x_offset: -33
 y_offset: -5
 
@@ -359,11 +336,9 @@ y_offset: -5
 #z_offset: 2.335
 
 ######### PETG/Smooth PEI #########
-# z_offset: 2.385 # PETG/Smooth PEI/Bed:75c/Ambient:c. to close
-# z_offset: 2.305 # PETG/Smooth PEI/Bed:75c/Ambient:c. close to perfect. some weak brim connection, some to much. good overall stick
-# z_offset: 2.295 # PETG/Smooth PEI/Bed:75c/Ambient:c. to far for the brim, brim lines not all connecting to each other
+# z_offset: 2.315 # PETG/Smooth PEI/Bed:75c/Ambient:c. to close. upper limit
 # z_offset: 2.300 # PETG/Smooth PEI/Bed:75c/Ambient:c. close to perfect
-z_offset: 2.310
+z_offset: 2.305
 
 speed: 5.0
 samples: 2
@@ -372,7 +347,7 @@ samples_result: average
 #   "median" or "average". The default is average.
 sample_retract_dist: 2.0
 # samples_tolerance: 0.05 # default
-samples_tolerance: 0.0015
+samples_tolerance: 0.0017
 samples_tolerance_retries: 20
 #   See the "probe" section for information on these parameters.
 stow_on_each_sample: False
@@ -408,17 +383,6 @@ horizontal_move_z: 5
 speed: 120
 screw_thread: CW-M4
 
-[z_tilt]
-z_positions: 119, 287
-             119, -23
-points: 152, 231
-        152, 15
-speed: 120
-horizontal_move_z: 5
-retries: 20
-#retry_tolerance: 0.003 # working well at 5 speed
-retry_tolerance: 0.0020
-
 [bed_mesh]
 speed: 120
 horizontal_move_z: 5
@@ -445,10 +409,7 @@ bicubic_tension: 0.2 #default
 # Fans
 ###################################################################################
 [fan]
-pin: P2.1
-
-[heater_fan heatbreak_cooling_fan]
-pin: P2.2
+pin: PA8
 
 ###################################################################################
 # Display
@@ -477,8 +438,8 @@ pin: EXP1_1
 [board_pins]
 aliases:
     # EXP1 header
-    EXP1_1=P2.8,  EXP1_3=P0.19, EXP1_5=P0.20, EXP1_7=P0.17, EXP1_9=<GND>,
-    EXP1_2=P0.16, EXP1_4=<RST>, EXP1_6=P0.15, EXP1_8=P0.18, EXP1_10=<5V>
+    EXP1_1=PB5, EXP1_3=PA9,   EXP1_5=PA10, EXP1_7=PB8, EXP1_9=<GND>,
+    EXP1_2=PB6, EXP1_4=<RST>, EXP1_6=PB9,  EXP1_8=PB7, EXP1_10=<5V>
 
 # See the sample-lcd.cfg file for definitions of common LCD displays.
 
@@ -490,8 +451,8 @@ aliases:
 #detection_length: 7.00 ; Voron recommended value
 detection_length: 7.00 ; This can be adjusted to your desired level of sensitivity. 10 is a recomended value to prevent flow dropoff false triggers.
 extruder: extruder
-switch_pin: ^P1.26
-pause_on_runout: True ; This can be set to false to debug false positives putting the sensor in "monitor mode". The printer will not pause but it will run the runout_gcode below.
+switch_pin: ^PC12
+pause_on_runout: True ; This can be set to false to debug false positives putting the sensor in "monitor mode". The printer will not pause but it will run the runout_gcode below. 
 event_delay: 3.0
 pause_delay: 0.5
 runout_gcode:
@@ -500,10 +461,9 @@ runout_gcode:
 ###################################################################################
 # Additional Sensors
 ###################################################################################
-[temperature_sensor Mainboard]
-sensor_type: NTC 100K MGB18-104F39050L32
-sensor_pin: P1.30
-min_temp: 10
+[temperature_sensor mcu_temp]
+sensor_type: temperature_mcu
+min_temp: 0
 max_temp: 100
 
 [temperature_sensor raspberry_pi]
@@ -515,16 +475,14 @@ max_temp: 100
 # Neopixels
 ###################################################################################
 [neopixel sb_leds]
-
-[neopixel chamber_leds]
-pin: P1.22
+pin: PC7
 #   The pin connected to the neopixel. This parameter must be
 #   provided.
-chain_count: 48
+chain_count: 10
 #   The number of Neopixel chips that are "daisy chained" to the
 #   provided pin. The default is 1 (which indicates only a single
 #   Neopixel is connected to the pin).
-color_order: GRB
+color_order: GRB,GRB,GRB,GRB,GRB,GRB,GRB,GRB,GRBW,GRBW
 #   Set the pixel order required by the LED hardware (using a string
 #   containing the letters R, G, B, W with W optional). Alternatively,
 #   this may be a comma separated list of pixel orders - one for each
@@ -535,15 +493,15 @@ initial_BLUE: 0.0
 initial_WHITE: 0.0
 #   See the "led" section for information on these parameters.
 
-[neopixel sb_leds]
-pin: P1.24
+[neopixel chamber_leds]
+pin: PC14
 #   The pin connected to the neopixel. This parameter must be
 #   provided.
-chain_count: 10
+chain_count: 48
 #   The number of Neopixel chips that are "daisy chained" to the
 #   provided pin. The default is 1 (which indicates only a single
 #   Neopixel is connected to the pin).
-color_order: GRB,GRB,GRB,GRB,GRB,GRB,GRB,GRB,GRBW,GRBW
+color_order: GRB
 #   Set the pixel order required by the LED hardware (using a string
 #   containing the letters R, G, B, W with W optional). Alternatively,
 #   this may be a comma separated list of pixel orders - one for each
